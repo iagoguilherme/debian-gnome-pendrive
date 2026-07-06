@@ -11,6 +11,7 @@ Repositório para gerar uma imagem Debian bootável com desktop e ferramentas ba
 - Base para agentes de terminal: Node/npm, Codex CLI, Claude Code e dotfiles.
 - Integração com o repositório de configurações `git@github.com:iagoguilherme/mac-bootstrap.git`, incluindo Ghostty, Claude e Codex.
 - Dependências Saggeo do arquivo `DEPENDENCIES.md`: Pillow, piexif, Flask, bibliotecas Google, gcloud, 1Password CLI e padrões de Secret Manager.
+- Assistente de primeiro login para orientar a pós-instalação e oferecer agentes/cloud tools.
 - Scripts separados para gravar a ISO no pendrive no macOS ou no Linux, sempre com confirmação explícita.
 
 ## Requisitos
@@ -49,6 +50,19 @@ No Mac, depois de trazer a ISO para esta pasta:
 
 O script mostra os discos externos, pede o identificador do pendrive e exige a frase de confirmação antes de apagar qualquer coisa.
 
+## Boot pelo pendrive
+
+A ISO gerada é híbrida e deve iniciar em BIOS legado e UEFI. No computador alvo,
+abra o menu de boot da placa-mãe e escolha a entrada USB, de preferência a opção
+começando por `UEFI`.
+
+Teclas comuns para o menu de boot: `F12`, `F8`, `Esc`, `Del` ou `F11`, dependendo
+do fabricante. O pendrive não consegue sozinho forçar a placa-mãe a iniciar por
+ele; essa escolha fica na BIOS/UEFI do computador.
+
+Depois que o Debian for instalado no disco interno, o instalador configura o GRUB
+e o computador passa a iniciar pelo sistema instalado.
+
 ## Gravar no pendrive pelo Linux
 
 ```bash
@@ -67,7 +81,8 @@ Cada arquivo `*.list.chroot` vira uma lista de pacotes instalada dentro da ISO.
 
 ## Agentes, Claude, Codex E Ghostty
 
-Depois de instalar o Debian no computador, rode com o usuário normal:
+No primeiro login, o assistente `saggeo-primeiro-login` abre automaticamente e
+oferece essa etapa. Para rodar manualmente com o usuário normal:
 
 ```bash
 saggeo-instalar-agentes
@@ -106,4 +121,5 @@ Ele não grava credenciais. O padrão operacional continua sendo:
 
 ## Observação
 
-Este repositório cria um sistema live/installável mais completo. Ele não cria um repositório GitHub remoto automaticamente, porque criar repositório remoto exige confirmação explícita.
+Este repositório cria um sistema live/installável mais completo. Segredos,
+tokens, chaves SSH e credenciais continuam fora da ISO.

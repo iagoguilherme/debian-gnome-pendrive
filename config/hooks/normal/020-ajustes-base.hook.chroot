@@ -9,6 +9,9 @@ Depois de instalar, rode:
 
   sudo saggeo-pos-instalacao
 
+No primeiro login do usuario instalado, o assistente Saggeo abre um terminal
+com os proximos passos.
+
 Para instalar Codex, Claude Code e aplicar dotfiles:
 
   saggeo-instalar-agentes
@@ -20,5 +23,6 @@ Para instalar gcloud e 1Password CLI:
 MOTD
 
 chmod 755 /usr/local/sbin/saggeo-pos-instalacao
+chmod 755 /usr/local/bin/saggeo-primeiro-login
 chmod 755 /usr/local/bin/saggeo-instalar-agentes
 chmod 755 /usr/local/bin/saggeo-instalar-cloud-tools

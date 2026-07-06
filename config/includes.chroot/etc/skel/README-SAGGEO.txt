@@ -2,7 +2,12 @@ Debian SAGGEO completo
 
 Este sistema foi gerado pelo repositório debian-pendrive-completo.
 
-Depois de instalar no computador, rode:
+No primeiro login do usuario instalado, um terminal Saggeo abre automaticamente
+com os proximos passos. Se ele nao abrir, procure no menu:
+
+  Saggeo Pos-instalacao
+
+Ou rode manualmente:
 
   sudo saggeo-pos-instalacao
 

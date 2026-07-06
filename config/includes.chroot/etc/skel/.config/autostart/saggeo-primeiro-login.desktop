@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Saggeo Primeiro Login
+Comment=Abre o assistente inicial do Debian SAGGEO completo
+Exec=gnome-terminal -- /usr/local/bin/saggeo-primeiro-login --autostart
+Terminal=false
+X-GNOME-Autostart-enabled=true

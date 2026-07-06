@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Saggeo Pos-instalacao
+Comment=Assistente de pos-instalacao do Debian SAGGEO completo
+Exec=gnome-terminal -- /usr/local/bin/saggeo-primeiro-login
+Icon=utilities-terminal
+Terminal=false
+Categories=System;Utility;

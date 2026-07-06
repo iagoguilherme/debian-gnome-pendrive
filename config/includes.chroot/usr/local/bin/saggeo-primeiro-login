@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+STATE_DIR="${XDG_STATE_HOME:-${HOME}/.local/state}/saggeo"
+MARKER="${STATE_DIR}/primeiro-login.concluido"
+
+log() {
+  printf '[saggeo-primeiro-login] %s\n' "$*"
+}
+
+perguntar_sim() {
+  local pergunta="$1"
+  local padrao="${2:-s}"
+  local resposta
+
+  if [[ "${padrao}" == "s" ]]; then
+    read -r -p "${pergunta} [S/n] " resposta
+    [[ -z "${resposta}" || "${resposta}" =~ ^[Ss]$ ]]
+  else
+    read -r -p "${pergunta} [s/N] " resposta
+    [[ "${resposta}" =~ ^[Ss]$ ]]
+  fi
+}
+
+rodar_se_existir() {
+  local comando="$1"
+  shift
+
+  if ! command -v "${comando}" >/dev/null 2>&1; then
+    log "Comando nao encontrado: ${comando}"
+    return 0
+  fi
+
+  "$comando" "$@"
+}
+
+main() {
+  mkdir -p "${STATE_DIR}"
+
+  if [[ "${1:-}" == "--autostart" && -e "${MARKER}" ]]; then
+    exit 0
+  fi
+
+  clear || true
+  cat <<'EOF'
+Debian SAGGEO completo
+
+Este usuario ja recebeu os atalhos e scripts padrao da imagem customizada.
+
+Programas instalados na propria ISO:
+- GNOME, Firefox, LibreOffice e instalador grafico.
+- Git, curl, wget, jq, ripgrep, tmux, build-essential e utilitarios base.
+- Python, venv, pip, numpy, pandas, scipy, matplotlib, openpyxl, Pillow,
+  piexif, Flask e bibliotecas Google comuns.
+- Node.js, npm, gh e base para Codex/Claude.
+
+Comandos Saggeo disponiveis:
+- sudo saggeo-pos-instalacao
+- saggeo-instalar-agentes
+- saggeo-instalar-cloud-tools
+
+Credenciais, tokens e chaves nao ficam dentro da ISO.
+EOF
+  printf '\n'
+
+  if perguntar_sim "Rodar a pos-instalacao base agora?" "s"; then
+    sudo saggeo-pos-instalacao
+  fi
+
+  if perguntar_sim "Instalar Codex, Claude Code e aplicar dotfiles agora?" "n"; then
+    rodar_se_existir saggeo-instalar-agentes
+  fi
+
+  if perguntar_sim "Instalar Google Cloud CLI e 1Password CLI agora?" "n"; then
+    rodar_se_existir saggeo-instalar-cloud-tools
+  fi
+
+  touch "${MARKER}"
+  printf '\n'
+  log "Assistente concluido. Voce pode reabrir pelo menu: Saggeo Pos-instalacao."
+  read -r -p "Pressione Enter para fechar." _
+}
+
+main "$@"
