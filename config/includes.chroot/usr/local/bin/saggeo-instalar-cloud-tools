@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+GCP_PROJECT="${GCP_PROJECT:-saggeo-ecosystem-prod}"
+GCP_REGION="${GCP_REGION:-us-central1}"
+
+log() {
+  printf '[saggeo-cloud] %s\n' "$*"
+}
+
+require_sudo() {
+  if ! sudo -v; then
+    echo "Este script precisa de sudo para instalar repositorios apt." >&2
+    exit 1
+  fi
+}
+
+instalar_base() {
+  sudo apt-get update
+  sudo apt-get install -y ca-certificates curl gnupg gpg apt-transport-https lsb-release
+}
+
+instalar_gcloud() {
+  if command -v gcloud >/dev/null 2>&1; then
+    log "gcloud ja instalado."
+    return
+  fi
+
+  log "Configurando repositorio apt oficial do Google Cloud CLI."
+  curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+    | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/google-cloud-cli.gpg
+
+  printf '%s\n' \
+    'Types: deb' \
+    'URIs: https://packages.cloud.google.com/apt' \
+    'Suites: cloud-sdk' \
+    'Components: main' \
+    "Architectures: $(dpkg --print-architecture)" \
+    'Signed-By: /usr/share/keyrings/google-cloud-cli.gpg' \
+    | sudo tee /etc/apt/sources.list.d/google-cloud-cli.sources >/dev/null
+
+  sudo apt-get update
+  sudo apt-get install -y google-cloud-cli
+
+  gcloud config set project "${GCP_PROJECT}" || true
+  gcloud config set run/region "${GCP_REGION}" || true
+  log "gcloud instalado. Autentique depois com: gcloud auth login"
+}
+
+instalar_1password_cli() {
+  if command -v op >/dev/null 2>&1; then
+    log "1Password CLI ja instalado."
+    return
+  fi
+
+  log "Configurando repositorio apt oficial do 1Password CLI."
+  curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+    | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/1password-archive-keyring.gpg
+
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" \
+    | sudo tee /etc/apt/sources.list.d/1password.list >/dev/null
+
+  sudo mkdir -p /etc/debsig/policies/AC2D62742012EA22/ /usr/share/debsig/keyrings/AC2D62742012EA22
+
+  curl -fsSL https://downloads.1password.com/linux/debian/debsig/1password.pol \
+    | sudo tee /etc/debsig/policies/AC2D62742012EA22/1password.pol >/dev/null
+
+  curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+    | sudo gpg --batch --yes --dearmor -o /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+
+  sudo apt-get update
+  sudo apt-get install -y 1password-cli
+
+  log "1Password CLI instalado. Segredos continuam fora da ISO."
+  log "Padrao VM: /etc/1password/op.env com modo 0600, se houver service account."
+}
+
+main() {
+  require_sudo
+  instalar_base
+  instalar_gcloud
+  instalar_1password_cli
+
+  log "Concluido."
+}
+
+main "$@"
+

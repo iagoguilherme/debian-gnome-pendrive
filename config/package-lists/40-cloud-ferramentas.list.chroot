@@ -1,0 +1,6 @@
+# Base para GCP, 1Password CLI e instaladores oficiais
+apt-transport-https
+gpg
+lsb-release
+debian-archive-keyring
+

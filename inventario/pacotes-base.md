@@ -40,6 +40,12 @@
 - BeautifulSoup
 - lxml
 - PyYAML
+- Pillow
+- piexif
+- Flask
+- google-auth
+- Google API client
+- Google Maps client opcional
 - IPython
 - pipx
 
@@ -52,3 +58,21 @@
 - zsh
 - dotfiles/configuração padrão: `git@github.com:iagoguilherme/mac-bootstrap.git`
 - configuração de Ghostty aplicada a partir de `ghostty/config` no repo de dotfiles
+
+## Cloud, Segredos E APIs Externas
+
+- `gcloud` via Google Cloud CLI oficial
+- `op` via 1Password CLI oficial
+- projeto GCP padrão: `saggeo-ecosystem-prod`
+- região padrão: `us-central1`
+- GCP Secret Manager como fonte para Cloud Run
+- 1Password CLI como fonte para VMs e máquinas locais
+- Foxit PDF Services documentado como dependência externa; credenciais ficam no 1Password, nunca na ISO
+- SERPRO consulta-cpf-df/v1 documentado como dependência de runtime
+- Google Maps Geocoding fica opcional, apenas fallback
+
+## Observacoes De Seguranca
+
+- A ISO nao embute tokens, service accounts, `.env` nem chaves.
+- `op://` e Secret Manager sao configurados depois da instalacao, no ambiente real.
+- O arquivo `/etc/1password/op.env`, quando usado em VM, deve ser criado manualmente com modo `0600`.

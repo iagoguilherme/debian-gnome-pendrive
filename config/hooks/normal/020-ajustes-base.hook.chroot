@@ -13,8 +13,12 @@ Para instalar Codex, Claude Code e aplicar dotfiles:
 
   saggeo-instalar-agentes
 
+Para instalar gcloud e 1Password CLI:
+
+  saggeo-instalar-cloud-tools
+
 MOTD
 
 chmod 755 /usr/local/sbin/saggeo-pos-instalacao
 chmod 755 /usr/local/bin/saggeo-instalar-agentes
-
+chmod 755 /usr/local/bin/saggeo-instalar-cloud-tools

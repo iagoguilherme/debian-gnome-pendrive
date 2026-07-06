@@ -10,6 +10,7 @@ Repositório para gerar uma imagem Debian bootável com desktop e ferramentas ba
 - Pilha Python com `venv`, `pip`, `numpy`, `pandas`, `scipy`, `matplotlib`, `openpyxl` e utilitários comuns.
 - Base para agentes de terminal: Node/npm, Codex CLI, Claude Code e dotfiles.
 - Integração com o repositório de configurações `git@github.com:iagoguilherme/mac-bootstrap.git`, incluindo Ghostty, Claude e Codex.
+- Dependências Saggeo do arquivo `DEPENDENCIES.md`: Pillow, piexif, Flask, bibliotecas Google, gcloud, 1Password CLI e padrões de Secret Manager.
 - Scripts separados para gravar a ISO no pendrive no macOS ou no Linux, sempre com confirmação explícita.
 
 ## Requisitos
@@ -81,6 +82,27 @@ Esse comando:
 - aplica config do Ghostty, Claude Code e template do Codex sem copiar segredos.
 
 Logins e tokens ficam fora da ISO. Depois você autentica Codex, Claude e GitHub normalmente no sistema instalado.
+
+## GCP, 1Password E Dependências Saggeo
+
+Depois de instalar o Debian no computador, rode:
+
+```bash
+saggeo-instalar-cloud-tools
+```
+
+Esse comando instala:
+
+- Google Cloud CLI (`gcloud`) pelo repositório apt oficial do Google;
+- 1Password CLI (`op`) pelo repositório apt oficial do 1Password;
+- projeto padrão `saggeo-ecosystem-prod`;
+- região padrão `us-central1`.
+
+Ele não grava credenciais. O padrão operacional continua sendo:
+
+- 1Password CLI para VMs/máquinas locais;
+- Secret Manager para Cloud Run;
+- tokens e service accounts configurados depois, fora da ISO.
 
 ## Observação
 
