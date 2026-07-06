@@ -1,0 +1,16 @@
+.DS_Store
+.env
+.env.*
+secrets/
+*.pem
+*.key
+*credentials*
+auth.json
+id_rsa
+id_ed25519
+build/
+dist/
+*.iso
+*.img
+*.log
+*.tmp

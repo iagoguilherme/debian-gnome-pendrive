@@ -1,0 +1,20 @@
+# Desktop e instalador
+task-gnome-desktop
+task-brazilian-portuguese
+task-portuguese
+calamares
+calamares-settings-debian
+network-manager
+sudo
+firefox-esr
+libreoffice
+evince
+file-roller
+gparted
+
+# Firmware e suporte comum de hardware
+firmware-linux
+firmware-linux-free
+firmware-misc-nonfree
+firmware-realtek
+

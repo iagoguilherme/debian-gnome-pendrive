@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Rode como root: sudo saggeo-pos-instalacao" >&2
+  exit 1
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y \
+  ca-certificates curl wget git git-lfs gnupg jq ripgrep fd-find tree htop tmux \
+  vim nano rsync zip unzip openssh-client openssh-server build-essential pkg-config \
+  python3 python3-dev python3-pip python3-venv python3-setuptools python3-wheel \
+  python3-numpy python3-pandas python3-scipy python3-matplotlib python3-openpyxl \
+  python3-requests python3-bs4 python3-lxml python3-yaml ipython3 pipx \
+  network-manager sudo nodejs npm zsh gh
+
+systemctl enable NetworkManager || true
+systemctl enable ssh || true
+
+echo "Pos-instalacao concluida."

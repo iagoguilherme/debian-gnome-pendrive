@@ -1,0 +1,19 @@
+# Python e dados
+python3
+python3-dev
+python3-pip
+python3-venv
+python3-setuptools
+python3-wheel
+python3-numpy
+python3-pandas
+python3-scipy
+python3-matplotlib
+python3-openpyxl
+python3-requests
+python3-bs4
+python3-lxml
+python3-yaml
+ipython3
+pipx
+

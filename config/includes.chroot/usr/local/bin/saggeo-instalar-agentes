@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+DOTFILES_REPO="${DOTFILES_REPO:-git@github.com:iagoguilherme/mac-bootstrap.git}"
+DOTFILES_DIR="${DOTFILES_DIR:-${HOME}/dotfiles}"
+
+log() {
+  printf '[saggeo-agentes] %s\n' "$*"
+}
+
+confirmar() {
+  local pergunta="$1"
+  local resposta
+  read -r -p "${pergunta} [s/N] " resposta
+  [[ "${resposta}" =~ ^[Ss]$ ]]
+}
+
+instalar_base() {
+  if command -v apt-get >/dev/null 2>&1; then
+    log "Instalando base para agentes via apt."
+    sudo apt-get update
+    sudo apt-get install -y git curl ca-certificates nodejs npm zsh gh
+  fi
+}
+
+instalar_codex() {
+  if command -v codex >/dev/null 2>&1; then
+    log "Codex ja instalado."
+    return
+  fi
+
+  log "Instalando Codex CLI via npm: @openai/codex"
+  sudo npm install -g @openai/codex
+}
+
+instalar_claude_code() {
+  if command -v claude >/dev/null 2>&1; then
+    log "Claude Code ja instalado."
+    return
+  fi
+
+  if ! confirmar "Instalar Claude Code pelo instalador oficial da Anthropic?"; then
+    log "Claude Code pulado."
+    return
+  fi
+
+  local instalador
+  instalador="$(mktemp)"
+  curl -fsSL -o "${instalador}" https://claude.ai/install.sh
+  bash "${instalador}"
+  rm -f "${instalador}"
+}
+
+aplicar_dotfiles() {
+  if [[ ! -d "${DOTFILES_DIR}/.git" ]]; then
+    log "Clonando dotfiles/configuracoes de ${DOTFILES_REPO}."
+    if ! git clone "${DOTFILES_REPO}" "${DOTFILES_DIR}"; then
+      log "Nao consegui clonar os dotfiles. Configure SSH/GitHub ou rode depois:"
+      log "  DOTFILES_REPO=<repo-acessivel> saggeo-instalar-agentes"
+      return
+    fi
+  else
+    log "Atualizando dotfiles em ${DOTFILES_DIR}."
+    git -C "${DOTFILES_DIR}" pull --ff-only || true
+  fi
+
+  mkdir -p "${HOME}/.config/ghostty" "${HOME}/.claude" "${HOME}/.codex"
+
+  if [[ -f "${DOTFILES_DIR}/ghostty/config" ]]; then
+    ln -sf "${DOTFILES_DIR}/ghostty/config" "${HOME}/.config/ghostty/config"
+    log "Config do Ghostty aplicada."
+  fi
+
+  if [[ -f "${DOTFILES_DIR}/claude/CLAUDE.md" ]]; then
+    ln -sf "${DOTFILES_DIR}/claude/CLAUDE.md" "${HOME}/.claude/CLAUDE.md"
+    log "CLAUDE.md global aplicado."
+  fi
+
+  if [[ -f "${DOTFILES_DIR}/claude/settings.json" ]]; then
+    ln -sf "${DOTFILES_DIR}/claude/settings.json" "${HOME}/.claude/settings.json"
+    log "settings.json do Claude aplicado."
+  fi
+
+  if [[ -f "${DOTFILES_DIR}/codex/config.example.toml" && ! -e "${HOME}/.codex/config.toml" ]]; then
+    cp "${DOTFILES_DIR}/codex/config.example.toml" "${HOME}/.codex/config.toml"
+    log "Template do Codex aplicado."
+  fi
+}
+
+main() {
+  instalar_base
+  instalar_codex
+  instalar_claude_code
+  aplicar_dotfiles
+
+  log "Concluido. Depois faca login no Codex/Claude quando abrir cada CLI."
+}
+
+main "$@"

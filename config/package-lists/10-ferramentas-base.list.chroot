@@ -1,0 +1,25 @@
+# Terminal e administracao
+ca-certificates
+curl
+wget
+git
+git-lfs
+gnupg
+jq
+ripgrep
+fd-find
+tree
+htop
+tmux
+vim
+nano
+rsync
+zip
+unzip
+openssh-client
+openssh-server
+build-essential
+pkg-config
+make
+cmake
+

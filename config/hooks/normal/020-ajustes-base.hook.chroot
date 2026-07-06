@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+cat > /etc/motd <<'MOTD'
+Debian SAGGEO completo
+
+Sistema live/installavel com GNOME, ferramentas base, pilha Python e apoio para agentes.
+Depois de instalar, rode:
+
+  sudo saggeo-pos-instalacao
+
+Para instalar Codex, Claude Code e aplicar dotfiles:
+
+  saggeo-instalar-agentes
+
+MOTD
+
+chmod 755 /usr/local/sbin/saggeo-pos-instalacao
+chmod 755 /usr/local/bin/saggeo-instalar-agentes
+
