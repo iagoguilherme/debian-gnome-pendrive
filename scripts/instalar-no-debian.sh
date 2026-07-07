@@ -34,7 +34,7 @@ fi
 barra() {
   local atual="$1"
   local total="$2"
-  local largura=28
+  local largura=18
   local cheio=0
   local percentual=0
   local i
@@ -52,6 +52,45 @@ barra() {
     printf '-'
   done
   printf '] %3d%%' "${percentual}"
+}
+
+largura_terminal() {
+  local cols
+  cols="$(tput cols 2>/dev/null || printf '80')"
+  if [[ ! "${cols}" =~ ^[0-9]+$ || "${cols}" -lt 60 ]]; then
+    cols=80
+  fi
+  printf '%s' "${cols}"
+}
+
+encurtar() {
+  local texto="$1"
+  local max="$2"
+
+  if [[ "${max}" -lt 8 ]]; then
+    max=8
+  fi
+
+  if [[ "${#texto}" -le "${max}" ]]; then
+    printf '%s' "${texto}"
+  else
+    printf '%s...' "${texto:0:max-3}"
+  fi
+}
+
+linha_status() {
+  local descricao="$1"
+  local estado="$2"
+  local cor_estado="$3"
+  local bar texto cols max_desc
+
+  bar="$(barra "${passo_atual}" "${total_passos}")"
+  cols="$(largura_terminal)"
+  max_desc=$((cols - ${#bar} - ${#estado} - 6))
+  texto="$(encurtar "${descricao}" "${max_desc}")"
+
+  printf '\r\033[K%b%s%b %s %b%s%b' \
+    "${cyan}" "${bar}" "${reset}" "${texto}" "${cor_estado}" "${estado}" "${reset}"
 }
 
 banner() {
@@ -95,10 +134,11 @@ iniciar_sudo_keepalive() {
 
 etapa_sudo() {
   passo_atual=$((passo_atual + 1))
-  printf '%b%s%b %s\n' "${cyan}" "$(barra "${passo_atual}" "${total_passos}")" "${reset}" "Autorizando sudo"
+  linha_status "Autorizando sudo" "..." "${yellow}"
   sudo -v || falhar "Nao consegui liberar sudo."
   iniciar_sudo_keepalive
-  printf '%bOK%b sudo liberado\n\n' "${green}" "${reset}"
+  linha_status "Autorizando sudo" "OK" "${green}"
+  printf '\n'
 }
 
 rodar_limpo() {
@@ -106,11 +146,9 @@ rodar_limpo() {
   shift
   local pid
   local status
-  local frames='|/-\'
-  local frame=0
 
   passo_atual=$((passo_atual + 1))
-  printf '%b%s%b %s ' "${cyan}" "$(barra "${passo_atual}" "${total_passos}")" "${reset}" "${descricao}"
+  linha_status "${descricao}" "..." "${yellow}"
 
   {
     printf '\n### %s\n' "${descricao}"
@@ -119,23 +157,14 @@ rodar_limpo() {
   } >>"${log_file}" 2>&1 &
 
   pid="$!"
-  while kill -0 "${pid}" >/dev/null 2>&1; do
-    printf '\r%b%s%b %s %s' \
-      "${cyan}" "$(barra "${passo_atual}" "${total_passos}")" "${reset}" \
-      "${descricao}" "${frames:frame % 4:1}"
-    frame=$((frame + 1))
-    sleep 0.2
-  done
 
   if wait "${pid}"; then
-    printf '\r%b%s%b %s %bOK%b\n' \
-      "${cyan}" "$(barra "${passo_atual}" "${total_passos}")" "${reset}" \
-      "${descricao}" "${green}" "${reset}"
+    linha_status "${descricao}" "OK" "${green}"
+    printf '\n'
   else
     status="$?"
-    printf '\r%b%s%b %s %bFALHOU%b\n' \
-      "${cyan}" "$(barra "${passo_atual}" "${total_passos}")" "${reset}" \
-      "${descricao}" "${red}" "${reset}"
+    linha_status "${descricao}" "FALHOU" "${red}"
+    printf '\n'
     falhar "Falha na etapa: ${descricao}" "${status}"
   fi
 }
@@ -145,7 +174,8 @@ rodar_interativo() {
   shift
 
   passo_atual=$((passo_atual + 1))
-  printf '\n%b%s%b %s\n' "${cyan}" "$(barra "${passo_atual}" "${total_passos}")" "${reset}" "${descricao}"
+  linha_status "${descricao}" "..." "${yellow}"
+  printf '\n'
   printf '%bRespostas internas em auto-sim; logins externos ainda podem abrir tela/terminal.%b\n\n' "${yellow}" "${reset}"
 
   {
