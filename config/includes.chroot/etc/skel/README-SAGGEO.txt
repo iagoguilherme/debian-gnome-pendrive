@@ -18,11 +18,12 @@ Para instalar Codex, Claude Code e aplicar dotfiles:
 
   saggeo-instalar-agentes
 
-Para instalar leitor PDF, VLC, VSCodium, Google Chrome e Google Earth Pro:
+Para instalar Ghostty, leitor PDF, VLC, VSCodium, Google Chrome, Google Earth Pro
+e configurar os apps padrao:
 
   saggeo-instalar-apps-desktop
 
-Para aplicar o visual Ghostty/Clear Dark no GNOME Terminal:
+Para aplicar a configuracao Ghostty/Clear Dark:
 
   saggeo-aplicar-terminal
 

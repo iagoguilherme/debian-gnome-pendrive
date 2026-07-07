@@ -59,7 +59,7 @@ Programas instalados na propria ISO:
   piexif, Flask e bibliotecas Google comuns.
 - Node.js, npm, gh e base para Codex/Claude.
 - Variaveis Python prontas e comando saggeo-python-venv.
-- GNOME Terminal com visual Ghostty/Clear Dark.
+- Ghostty com visual Clear Dark.
 
 Comandos Saggeo disponiveis:
 - sudo saggeo-pos-instalacao
@@ -74,11 +74,11 @@ EOF
     sudo saggeo-pos-instalacao
   fi
 
-  if perguntar_sim "Instalar PDF, VLC, VSCodium, Chrome e Google Earth Pro agora?" "s"; then
+  if perguntar_sim "Instalar Ghostty, PDF, VLC, VSCodium, Chrome e Google Earth Pro agora?" "s"; then
     rodar_se_existir saggeo-instalar-apps-desktop
   fi
 
-  if perguntar_sim "Aplicar visual Ghostty/Clear Dark no GNOME Terminal agora?" "s"; then
+  if perguntar_sim "Aplicar configuracao Ghostty/Clear Dark agora?" "s"; then
     rodar_se_existir saggeo-aplicar-terminal
   fi
 

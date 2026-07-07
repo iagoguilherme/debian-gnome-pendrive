@@ -2,14 +2,33 @@
 
 Repositório para gerar uma imagem Debian bootável com desktop e ferramentas base de trabalho, evitando a instalação mínima sem interface que aconteceu com a imagem `netinst`.
 
+## Uso Rapido No Debian Novo
+
+Depois de instalar o Debian GNOME oficial pelo pendrive, rode apenas:
+
+```bash
+sudo apt update
+sudo apt install -y git
+git clone https://github.com/iagoguilherme/debian-gnome-pendrive.git
+cd debian-gnome-pendrive
+./scripts/instalar-debian.sh
+```
+
+Esse é o roteiro principal. Ele verifica o que já existe, complementa o que
+faltar e aplica as configurações do ambiente.
+
 ## O que este projeto entrega
 
 - ISO Debian Live `amd64` com GNOME.
 - Instalador gráfico incluído no ambiente live.
 - Pacotes base de terminal, rede, Git e desenvolvimento.
 - Pilha Python completa com `python3-full`, `venv`, `pip`, `numpy`, `pandas`, `scipy`, `matplotlib`, `openpyxl` e utilitários comuns.
-- Apps desktop: leitor PDF, VLC, VSCodium, Google Chrome e Google Earth Pro.
+- Apps desktop: Ghostty, leitor PDF, VLC, VSCodium, Google Chrome e Google Earth Pro.
 - Base para GitHub e agentes de terminal: Git, Git LFS, GitHub CLI `gh`, Node/npm, Codex CLI, Claude Code e dotfiles.
+- Ghostty com a configuração Clear Dark do repositório de dotfiles.
+- Google Chrome definido como navegador principal.
+- VSCodium definido para abrir arquivos de texto/código.
+- VLC definido para vídeos e mídias comuns.
 - Integração com o repositório de configurações `git@github.com:iagoguilherme/mac-bootstrap.git`, incluindo Ghostty, Claude e Codex.
 - Dependências Saggeo do arquivo `DEPENDENCIES.md`: Pillow, piexif, Flask, bibliotecas Google, gcloud, 1Password CLI e padrões de Secret Manager.
 - Assistente de primeiro login para orientar a pós-instalação e oferecer agentes/cloud tools.
@@ -26,28 +45,24 @@ Para gerar a ISO customizada:
 
 No macOS, use este repositório para gravar a ISO pronta no pendrive. A geração da ISO completa usa `live-build`, que deve rodar em Linux.
 
-## Instalar Tudo No Debian Oficial
+## O Que O Script Unico Configura
 
-Se o computador foi instalado com a ISO oficial do Debian GNOME, clone este repo
-e rode um comando unico:
+`./scripts/instalar-debian.sh` copia os comandos Saggeo para `/usr/local`,
+configura variaveis Python globais em `/etc/profile.d/saggeo-python.sh`, instala
+Python completo, Git, GitHub CLI, Ghostty, leitor PDF, VLC, VSCodium, Google
+Chrome, Google Earth Pro, Codex, Claude Code, Google Cloud CLI e 1Password.
 
-```bash
-cd debian-gnome-pendrive
-./scripts/instalar-debian.sh
-```
+Ele tambem aplica a configuracao Ghostty Clear Dark em `~/.config/ghostty/config`
+e define os apps padrao do desktop:
 
-Esse instalador copia os comandos Saggeo para `/usr/local`, configura variaveis
-Python globais em `/etc/profile.d/saggeo-python.sh`, roda a pos-instalacao base,
-instala Python completo, Git, GitHub CLI, leitor PDF, VLC, VSCodium, Google
-Chrome e Google Earth Pro, e aplica no GNOME Terminal o visual Clear Dark vindo
-da configuracao Ghostty. Codex/Claude/dotfiles, Google Cloud CLI e 1Password
-tambem sao instalados no mesmo roteiro. O instalador roda em modo automatico,
-assumindo `sim/yes` nas etapas do proprio projeto, mostra uma saida colorida com
-barra de progresso e grava os detalhes tecnicos em `~/.local/state/saggeo/`.
-Ele pode ser executado de novo: primeiro verifica o que ja existe e depois
-complementa apenas o que estiver faltando. Os scripts internos tambem checam
-pacotes/comandos antes de chamar instaladores, entao itens ja presentes sao
-marcados como `OK` no log e pulados.
+- Chrome para web/http/html;
+- VSCodium para textos, scripts e arquivos de codigo;
+- VLC para videos e midias comuns.
+
+O instalador roda em modo automatico, assumindo `sim/yes` nas etapas do proprio
+projeto, mostra uma saida colorida com barra de progresso e grava os detalhes
+tecnicos em `~/.local/state/saggeo/`. Ele pode ser executado de novo: primeiro
+verifica o que ja existe e depois complementa apenas o que estiver faltando.
 
 ## Gerar a ISO customizada
 
@@ -151,9 +166,10 @@ Para instalar ou reparar os apps desktop manualmente:
 saggeo-instalar-apps-desktop
 ```
 
-Esse comando instala `evince` como leitor PDF, VLC, VSCodium, Google Chrome e
-Google Earth Pro. Chrome e Earth Pro sao instalados somente em `amd64`, que e a
-arquitetura esperada para o PC alvo.
+Esse comando instala Ghostty, `evince` como leitor PDF, VLC, VSCodium, Google
+Chrome e Google Earth Pro, alem de configurar Chrome/VSCodium/VLC como apps
+padrao. Chrome e Earth Pro sao instalados somente em `amd64`, que e a arquitetura
+esperada para o PC alvo.
 
 ## Python E Terminal
 
@@ -170,17 +186,15 @@ Para criar um ambiente Python no projeto atual:
 saggeo-python-venv
 ```
 
-Para reaplicar o visual Ghostty/Clear Dark no GNOME Terminal:
+Para reaplicar a configuracao Ghostty/Clear Dark:
 
 ```bash
 saggeo-aplicar-terminal
 ```
 
 Esse comando instala a `JetBrainsMono Nerd Font` do projeto Nerd Fonts para
-habilitar icones no terminal, aplica a paleta Clear Dark do arquivo
-`ghostty/config` e define o perfil `Saggeo Clear Dark` como padrao. O GNOME
-Terminal moderno pode ignorar transparencia/blur; nesses casos cor e fonte
-continuam sendo aplicadas.
+habilitar icones no terminal e grava a paleta Clear Dark em
+`~/.config/ghostty/config`.
 
 ## Observação
 

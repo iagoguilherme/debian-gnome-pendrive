@@ -6,6 +6,7 @@ export APT_LISTCHANGES_FRONTEND=none
 
 GOOGLE_KEYRING="/usr/share/keyrings/google-linux-signing-key.gpg"
 VSCODIUM_KEYRING="/usr/share/keyrings/vscodium-archive-keyring.gpg"
+GHOSTTY_KEYRING="/usr/share/keyrings/debian.griffo.io.gpg"
 
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
@@ -53,7 +54,65 @@ require_privilegios() {
 instalar_base_debian() {
   instalar_pacotes_faltantes \
     ca-certificates curl wget gnupg gpg apt-transport-https lsb-release \
-    fontconfig evince vlc xdg-utils
+    fontconfig unzip evince vlc xdg-utils desktop-file-utils
+}
+
+apt_tem_candidato() {
+  local pacote="$1"
+  apt-cache policy "${pacote}" 2>/dev/null \
+    | awk '/Candidate:/ && $2 != "(none)" {encontrou=1} END {exit !encontrou}'
+}
+
+instalar_ghostty() {
+  local codename
+
+  if command -v ghostty >/dev/null 2>&1; then
+    log "Ghostty ja instalado."
+    return
+  fi
+
+  "${SUDO[@]}" apt-get update
+  if apt_tem_candidato ghostty; then
+    instalar_pacotes_faltantes ghostty
+    return
+  fi
+
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    codename="${VERSION_CODENAME:-}"
+  fi
+
+  if [[ -z "${codename:-}" ]] && command -v lsb_release >/dev/null 2>&1; then
+    codename="$(lsb_release -sc)"
+  fi
+
+  if [[ -z "${codename:-}" ]]; then
+    log "Nao consegui detectar a versao Debian para instalar Ghostty."
+    return
+  fi
+
+  log "Configurando repositorio Debian comunitario do Ghostty para ${codename}."
+  curl -fsSL \
+    -o "${tmp_dir}/debian.griffo.io.asc" \
+    https://debian.griffo.io/EA0F721D231FDD3A0A17B9AC7808B4DD62C41256.asc
+
+  "${SUDO[@]}" gpg --batch --yes --dearmor \
+    -o "${GHOSTTY_KEYRING}" \
+    "${tmp_dir}/debian.griffo.io.asc"
+
+  printf 'deb [signed-by=%s] https://debian.griffo.io/apt %s main\n' \
+    "${GHOSTTY_KEYRING}" \
+    "${codename}" \
+    | "${SUDO[@]}" tee /etc/apt/sources.list.d/debian.griffo.io.list >/dev/null
+
+  "${SUDO[@]}" apt-get update
+
+  if apt_tem_candidato ghostty; then
+    instalar_pacotes_faltantes ghostty
+  else
+    log "Ghostty nao ficou disponivel via apt para ${codename}. Pulando sem interromper."
+  fi
 }
 
 instalar_vscodium() {
@@ -141,12 +200,141 @@ instalar_google_earth() {
   "${SUDO[@]}" apt-get install -y "${deb}"
 }
 
+desktop_existe() {
+  local desktop="$1"
+  [[ -f "${HOME}/.local/share/applications/${desktop}" || -f "/usr/share/applications/${desktop}" ]]
+}
+
+primeiro_desktop_existente() {
+  local desktop
+  for desktop in "$@"; do
+    if desktop_existe "${desktop}"; then
+      printf '%s' "${desktop}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+definir_mime() {
+  local desktop="$1"
+  shift
+  local mime
+
+  if [[ -z "${desktop}" ]]; then
+    return
+  fi
+
+  for mime in "$@"; do
+    xdg-mime default "${desktop}" "${mime}" >/dev/null 2>&1 || true
+    gio mime "${mime}" "${desktop}" >/dev/null 2>&1 || true
+  done
+}
+
+configurar_favorito_gnome() {
+  local desktop="$1"
+  local lista atual
+
+  if [[ -z "${desktop}" || ! desktop_existe "${desktop}" ]]; then
+    return
+  fi
+
+  if ! command -v gsettings >/dev/null 2>&1; then
+    return
+  fi
+
+  if [[ "$(gsettings writable org.gnome.shell favorite-apps 2>/dev/null || true)" != "true" ]]; then
+    return
+  fi
+
+  lista="$(gsettings get org.gnome.shell favorite-apps 2>/dev/null || true)"
+  if [[ -z "${lista}" || "${lista}" == @* ]]; then
+    return
+  fi
+
+  if [[ "${lista}" == *"'${desktop}'"* ]]; then
+    return
+  fi
+
+  atual="$(printf '%s' "${lista}" | sed -e "s/^\\[//" -e "s/\\]$//" -e "s/[[:space:]]//g")"
+  if [[ -z "${atual}" ]]; then
+    gsettings set org.gnome.shell favorite-apps "['${desktop}']" >/dev/null 2>&1 || true
+  else
+    gsettings set org.gnome.shell favorite-apps "[${atual}, '${desktop}']" >/dev/null 2>&1 || true
+  fi
+}
+
+configurar_padroes_desktop() {
+  local chrome_desktop codium_desktop vlc_desktop ghostty_desktop
+
+  chrome_desktop="$(primeiro_desktop_existente google-chrome.desktop google-chrome-stable.desktop || true)"
+  codium_desktop="$(primeiro_desktop_existente codium.desktop com.vscodium.codium.desktop || true)"
+  vlc_desktop="$(primeiro_desktop_existente vlc.desktop org.videolan.VLC.desktop || true)"
+  ghostty_desktop="$(primeiro_desktop_existente com.mitchellh.ghostty.desktop ghostty.desktop || true)"
+
+  if [[ -n "${chrome_desktop}" ]]; then
+    xdg-settings set default-web-browser "${chrome_desktop}" >/dev/null 2>&1 || true
+    definir_mime "${chrome_desktop}" \
+      text/html \
+      application/xhtml+xml \
+      x-scheme-handler/http \
+      x-scheme-handler/https
+    log "Chrome definido como navegador principal."
+  fi
+
+  definir_mime "${codium_desktop}" \
+    text/plain \
+    text/markdown \
+    text/x-python \
+    text/x-shellscript \
+    text/x-csrc \
+    text/x-c++src \
+    text/x-java \
+    text/css \
+    text/javascript \
+    application/javascript \
+    application/json \
+    application/xml \
+    text/xml \
+    application/x-yaml \
+    text/x-yaml
+
+  if [[ -n "${codium_desktop}" ]]; then
+    log "VSCodium definido para arquivos de texto e codigo."
+  fi
+
+  definir_mime "${vlc_desktop}" \
+    video/mp4 \
+    video/x-matroska \
+    video/x-msvideo \
+    video/quicktime \
+    video/mpeg \
+    video/webm \
+    video/ogg \
+    application/ogg \
+    audio/mpeg \
+    audio/ogg \
+    audio/flac \
+    audio/x-wav
+
+  if [[ -n "${vlc_desktop}" ]]; then
+    log "VLC definido para videos e midia comum."
+  fi
+
+  configurar_favorito_gnome "${ghostty_desktop}"
+  configurar_favorito_gnome "${chrome_desktop}"
+  configurar_favorito_gnome "${codium_desktop}"
+}
+
 main() {
   require_privilegios
   instalar_base_debian
+  instalar_ghostty
   instalar_vscodium
   instalar_chrome
   instalar_google_earth
+  saggeo-aplicar-terminal || true
+  configurar_padroes_desktop
 
   log "Apps desktop instalados."
 }

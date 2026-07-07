@@ -1,27 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-perfil_nome="${SAGGEO_TERMINAL_PROFILE:-Saggeo Clear Dark}"
-perfil_id="${SAGGEO_TERMINAL_PROFILE_ID:-saggeo-clear-dark}"
-perfil_path="/org/gnome/terminal/legacy/profiles:/:${perfil_id}/"
-font_name="${SAGGEO_TERMINAL_FONT:-JetBrainsMono Nerd Font 14}"
-palette="['#35424c', '#b45648', '#6caa71', '#c4ac62', '#6d96b4', '#bd7bcd', '#7ccbcd', '#dee5eb', '#465c6d', '#df6c5a', '#79be7e', '#e5c872', '#67b5ed', '#d389e5', '#84dde0', '#e5eff5']"
+repo_config="${SAGGEO_GHOSTTY_CONFIG:-}"
+config_dir="${HOME}/.config/ghostty"
+config_file="${config_dir}/config"
 nerd_font_url="${SAGGEO_NERD_FONT_URL:-https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip}"
 
 log() {
   printf '[saggeo-terminal] %s\n' "$*"
-}
-
-require_desktop() {
-  if ! command -v gsettings >/dev/null 2>&1 || ! command -v dconf >/dev/null 2>&1 || ! command -v fc-cache >/dev/null 2>&1; then
-    echo "Instale gsettings/dconf/fontconfig antes: sudo apt install dconf-cli libglib2.0-bin fontconfig" >&2
-    exit 1
-  fi
-
-  if ! gsettings list-schemas | grep -qx 'org.gnome.Terminal.ProfilesList'; then
-    echo "GNOME Terminal nao encontrado para este usuario." >&2
-    exit 1
-  fi
 }
 
 fonte_nerd_instalada() {
@@ -38,8 +24,8 @@ instalar_nerd_font() {
     return
   fi
 
-  if ! command -v curl >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1; then
-    echo "Nao encontrei curl/unzip para instalar a Nerd Font." >&2
+  if ! command -v curl >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1 || ! command -v fc-cache >/dev/null 2>&1; then
+    echo "Nao encontrei curl/unzip/fontconfig para instalar a Nerd Font." >&2
     exit 1
   fi
 
@@ -54,95 +40,77 @@ instalar_nerd_font() {
   fc-cache -f "${HOME}/.local/share/fonts" >/dev/null
 }
 
-write_profile_key() {
-  local path="$1"
-  local chave="$2"
-  local valor="$3"
+escrever_config_padrao() {
+  cat > "${config_file}" <<'EOF'
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+window-padding-x = 12
+window-padding-y = 12
+copy-on-select = true
+keybind = global:opt+space=toggle_quick_terminal
+quick-terminal-autohide = false
+quick-terminal-position = top
 
-  dconf write "${path}${chave}" "${valor}" >/dev/null 2>&1 || true
+# Tema "Clear Dark" extraido do perfil do Terminal.app.
+background = #212734
+foreground = #e6e6e6
+selection-background = #334e5e
+palette = 0=#35424c
+palette = 1=#b45648
+palette = 2=#6caa71
+palette = 3=#c4ac62
+palette = 4=#6d96b4
+palette = 5=#bd7bcd
+palette = 6=#7ccbcd
+palette = 7=#dee5eb
+palette = 8=#465c6d
+palette = 9=#df6c5a
+palette = 10=#79be7e
+palette = 11=#e5c872
+palette = 12=#67b5ed
+palette = 13=#d389e5
+palette = 14=#84dde0
+palette = 15=#e5eff5
+
+background-opacity = 0.95
+background-blur = 20
+EOF
 }
 
-write_if_possible() {
-  local chave="$1"
-  local valor="$2"
+aplicar_config_ghostty() {
+  mkdir -p "${config_dir}"
 
-  write_profile_key "${perfil_path}" "${chave}" "${valor}"
+  if [[ -n "${repo_config}" && -f "${repo_config}" ]]; then
+    install -m 0644 "${repo_config}" "${config_file}"
+  else
+    escrever_config_padrao
+  fi
+
+  log "Config Ghostty aplicada em ${config_file}."
 }
 
-perfil_existe_na_lista() {
-  local lista="$1"
-  [[ "${lista}" == *"'${perfil_id}'"* || "${lista}" == *"${perfil_id}"* ]]
-}
+configurar_alternativa_terminal() {
+  local ghostty_bin
 
-adicionar_perfil_na_lista() {
-  local lista atual
-  lista="$(gsettings get org.gnome.Terminal.ProfilesList list)"
-
-  if perfil_existe_na_lista "${lista}"; then
+  if ! command -v ghostty >/dev/null 2>&1; then
+    log "Ghostty ainda nao esta instalado; apenas a config foi preparada."
     return
   fi
 
-  atual="$(printf '%s' "${lista}" | sed -e "s/^\\[//" -e "s/\\]$//" -e "s/[[:space:]]//g")"
-  if [[ -z "${atual}" || "${atual}" == "@as" ]]; then
-    gsettings set org.gnome.Terminal.ProfilesList list "['${perfil_id}']"
-  else
-    gsettings set org.gnome.Terminal.ProfilesList list "[${atual}, '${perfil_id}']"
+  ghostty_bin="$(command -v ghostty)"
+
+  if command -v update-alternatives >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+    sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator "${ghostty_bin}" 90 >/dev/null 2>&1 || true
+    sudo update-alternatives --set x-terminal-emulator "${ghostty_bin}" >/dev/null 2>&1 || true
+    log "Ghostty definido como x-terminal-emulator."
   fi
-}
-
-aplicar_valores_no_perfil() {
-  local path="$1"
-  local nome="${2:-}"
-
-  if [[ -n "${nome}" ]]; then
-    write_profile_key "${path}" "visible-name" "'${nome}'"
-  fi
-
-  write_profile_key "${path}" "use-theme-colors" "false"
-  write_profile_key "${path}" "foreground-color" "'#e6e6e6'"
-  write_profile_key "${path}" "background-color" "'#212734'"
-  write_profile_key "${path}" "bold-color-same-as-fg" "true"
-  write_profile_key "${path}" "palette" "${palette}"
-  write_profile_key "${path}" "use-system-font" "false"
-  write_profile_key "${path}" "font" "'${font_name}'"
-  write_profile_key "${path}" "cursor-shape" "'ibeam'"
-  write_profile_key "${path}" "scrollbar-policy" "'never'"
-  write_profile_key "${path}" "scrollback-unlimited" "true"
-  write_profile_key "${path}" "audible-bell" "false"
-  write_profile_key "${path}" "use-transparent-background" "true"
-  write_profile_key "${path}" "use-theme-transparency" "false"
-  write_profile_key "${path}" "background-transparency-percent" "5"
-}
-
-aplicar_perfil() {
-  local perfil_default perfil_default_path
-
-  perfil_default="$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")"
-  if [[ "${perfil_default}" == @* || "${perfil_default}" == "[]" ]]; then
-    perfil_default=""
-  fi
-
-  adicionar_perfil_na_lista
-
-  aplicar_valores_no_perfil "${perfil_path}" "${perfil_nome}"
-
-  if [[ -n "${perfil_default}" && "${perfil_default}" != "${perfil_id}" ]]; then
-    perfil_default_path="/org/gnome/terminal/legacy/profiles:/:${perfil_default}/"
-    aplicar_valores_no_perfil "${perfil_default_path}" ""
-    log "Tambem apliquei cores/fonte no perfil anterior: ${perfil_default}"
-  fi
-
-  gsettings set org.gnome.Terminal.ProfilesList default "${perfil_id}"
 }
 
 main() {
-  require_desktop
   instalar_nerd_font
-  aplicar_perfil
-  log "Perfil aplicado: ${perfil_nome}"
-  log "Fonte aplicada: ${font_name}"
-  log "Transparencia foi solicitada; GNOME Terminal moderno pode ignorar essa chave."
-  log "Abra um novo GNOME Terminal para ver o visual Clear Dark."
+  aplicar_config_ghostty
+  configurar_alternativa_terminal
+  log "Abra o Ghostty para usar a configuracao Clear Dark."
 }
 
 main "$@"

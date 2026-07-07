@@ -12,7 +12,7 @@ export APT_LISTCHANGES_FRONTEND=none
 pacotes="
 ca-certificates curl wget git git-lfs gnupg jq ripgrep fd-find tree htop tmux
 vim nano rsync zip unzip openssh-client openssh-server build-essential pkg-config
-evince vlc gnome-terminal dconf-cli fontconfig fonts-jetbrains-mono fonts-noto-color-emoji
+evince vlc xdg-utils desktop-file-utils gnome-terminal dconf-cli fontconfig fonts-jetbrains-mono fonts-noto-color-emoji
 python3 python3-full python3-dev python3-pip python3-venv python3-setuptools python3-wheel
 python3-numpy python3-pandas python3-scipy python3-matplotlib python3-openpyxl
 python3-pil python3-piexif python3-flask python3-requests python3-bs4 python3-lxml

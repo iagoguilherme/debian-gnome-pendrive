@@ -7,7 +7,12 @@
 - LibreOffice
 - Evince como leitor PDF
 - VLC
-- GNOME Terminal com perfil Clear Dark inspirado no Ghostty
+- Ghostty com configuracao Clear Dark
+- Ghostty instalado via apt quando disponivel; em Debian usa o repositorio comunitario `debian.griffo.io`
+- Chrome como navegador principal
+- VSCodium como app padrao para textos/codigo
+- VLC como app padrao para videos/midia
+- GNOME Terminal apenas como fallback do desktop
 - JetBrains Mono
 - JetBrainsMono Nerd Font instalada por `saggeo-aplicar-terminal`
 - Noto Color Emoji

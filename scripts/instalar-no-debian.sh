@@ -204,11 +204,10 @@ verificar_estado() {
     gh
     evince
     vlc
+    ghostty
     codium
     google-chrome
     google-earth-pro
-    gnome-terminal
-    dconf
     codex
     claude
     gcloud
@@ -223,7 +222,8 @@ verificar_estado() {
     python3-openpyxl
     fonts-jetbrains-mono
     fonts-noto-color-emoji
-    dconf-cli
+    xdg-utils
+    desktop-file-utils
     1password
     1password-cli
     google-cloud-cli
@@ -248,7 +248,7 @@ verificar_estado() {
     fi
   done
 
-  printf '\nVisual do terminal:\n'
+  printf '\nTerminal e padroes:\n'
   if command -v fc-match >/dev/null 2>&1 \
     && fc-match -f '%{family}\n' 'JetBrainsMono Nerd Font' 2>/dev/null \
       | grep -qi 'JetBrainsMono Nerd Font'; then
@@ -257,12 +257,17 @@ verificar_estado() {
     printf '  FALTA  JetBrainsMono Nerd Font\n'
   fi
 
-  if command -v gsettings >/dev/null 2>&1 \
-    && gsettings get org.gnome.Terminal.ProfilesList default 2>/dev/null \
-      | grep -q 'saggeo-clear-dark'; then
-    printf '  OK     Perfil Saggeo Clear Dark\n'
+  if [[ -f "${HOME}/.config/ghostty/config" ]]; then
+    printf '  OK     Config Ghostty\n'
   else
-    printf '  FALTA  Perfil Saggeo Clear Dark\n'
+    printf '  FALTA  Config Ghostty\n'
+  fi
+
+  if command -v xdg-settings >/dev/null 2>&1 \
+    && xdg-settings get default-web-browser 2>/dev/null | grep -q 'google-chrome'; then
+    printf '  OK     Chrome como navegador padrao\n'
+  else
+    printf '  FALTA  Chrome como navegador padrao\n'
   fi
 }
 
@@ -298,6 +303,11 @@ instalar_comandos_saggeo() {
   sudo install -m 0644 \
     "${repo_dir}/config/includes.chroot/etc/profile.d/saggeo-python.sh" \
     /etc/profile.d/saggeo-python.sh
+
+  install -d -m 0755 "${HOME}/.config/ghostty"
+  install -m 0644 \
+    "${repo_dir}/config/includes.chroot/etc/skel/.config/ghostty/config" \
+    "${HOME}/.config/ghostty/config"
 }
 
 main() {
@@ -319,8 +329,8 @@ main() {
   rodar_limpo "Verificando instalados e pendencias" verificar_estado
   rodar_limpo "Instalando comandos Saggeo" instalar_comandos_saggeo
   rodar_limpo "Atualizando base, Python, GitHub CLI e utilitarios" sudo saggeo-pos-instalacao
-  rodar_limpo "Instalando PDF, VLC, VSCodium, Chrome e Google Earth" saggeo-instalar-apps-desktop
-  rodar_limpo "Aplicando visual Ghostty no GNOME Terminal" saggeo-aplicar-terminal
+  rodar_limpo "Instalando Ghostty, apps e padroes do desktop" saggeo-instalar-apps-desktop
+  rodar_limpo "Configurando Ghostty e visual Clear Dark" saggeo-aplicar-terminal
   rodar_limpo "Instalando Codex, Claude Code e dotfiles" saggeo-instalar-agentes
   rodar_limpo "Instalando Google Cloud CLI e 1Password" saggeo-instalar-cloud-tools
 
