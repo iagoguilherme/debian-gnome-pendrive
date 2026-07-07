@@ -5,7 +5,8 @@
 - GNOME completo via `task-gnome-desktop`
 - Firefox ESR
 - LibreOffice
-- Evince
+- Evince como leitor PDF
+- VLC
 - GParted
 - Calamares para instalacao grafica a partir do live
 
@@ -28,6 +29,7 @@
 ## Python E Dados
 
 - python3
+- python3-full
 - python3-venv
 - python3-pip
 - python3-dev
@@ -59,10 +61,18 @@
 - dotfiles/configuração padrão: `git@github.com:iagoguilherme/mac-bootstrap.git`
 - configuração de Ghostty aplicada a partir de `ghostty/config` no repo de dotfiles
 
+## Apps Desktop Externos
+
+- VSCodium via repositorio apt do projeto VSCodium
+- Google Chrome via repositorio apt oficial do Google
+- Google Earth Pro via pacote `.deb` oficial do Google
+- Instalador unico para Debian ja instalado: `scripts/instalar-no-debian.sh`
+
 ## Cloud, Segredos E APIs Externas
 
 - `gcloud` via Google Cloud CLI oficial
 - `op` via 1Password CLI oficial
+- app desktop 1Password via repositorio apt oficial
 - projeto GCP padrão: `saggeo-ecosystem-prod`
 - região padrão: `us-central1`
 - GCP Secret Manager como fonte para Cloud Run

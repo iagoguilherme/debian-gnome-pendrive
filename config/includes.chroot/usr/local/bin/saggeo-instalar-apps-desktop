@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+GOOGLE_KEYRING="/usr/share/keyrings/google-linux-signing-key.gpg"
+VSCODIUM_KEYRING="/usr/share/keyrings/vscodium-archive-keyring.gpg"
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "${tmp_dir}"' EXIT
+
+if [[ "$(id -u)" -eq 0 ]]; then
+  SUDO=()
+else
+  SUDO=(sudo)
+fi
+
+log() {
+  printf '[saggeo-apps] %s\n' "$*"
+}
+
+require_privilegios() {
+  if [[ "${#SUDO[@]}" -gt 0 ]]; then
+    if ! sudo -v; then
+      echo "Este script precisa de sudo para instalar aplicativos." >&2
+      exit 1
+    fi
+  fi
+}
+
+instalar_base_debian() {
+  log "Instalando leitor PDF, VLC e utilitarios de instalacao."
+  "${SUDO[@]}" apt-get update
+  "${SUDO[@]}" apt-get install -y \
+    ca-certificates curl wget gnupg gpg apt-transport-https lsb-release \
+    evince vlc xdg-utils
+}
+
+instalar_vscodium() {
+  if command -v codium >/dev/null 2>&1; then
+    log "VSCodium ja instalado."
+    return
+  fi
+
+  log "Configurando repositorio apt do VSCodium."
+  curl -fsSL \
+    -o "${tmp_dir}/vscodium.pub.gpg" \
+    https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg
+
+  "${SUDO[@]}" gpg --batch --yes --dearmor \
+    -o "${VSCODIUM_KEYRING}" \
+    "${tmp_dir}/vscodium.pub.gpg"
+
+  printf '%s\n' \
+    'Types: deb' \
+    'URIs: https://download.vscodium.com/debs' \
+    'Suites: vscodium' \
+    'Components: main' \
+    'Architectures: amd64 arm64' \
+    "Signed-By: ${VSCODIUM_KEYRING}" \
+    | "${SUDO[@]}" tee /etc/apt/sources.list.d/vscodium.sources >/dev/null
+
+  "${SUDO[@]}" apt-get update
+  "${SUDO[@]}" apt-get install -y codium
+}
+
+instalar_chrome() {
+  local arch
+  arch="$(dpkg --print-architecture)"
+
+  if [[ "${arch}" != "amd64" ]]; then
+    log "Google Chrome pulado: pacote oficial Linux disponivel para amd64; arquitetura atual: ${arch}."
+    return
+  fi
+
+  if command -v google-chrome >/dev/null 2>&1 || command -v google-chrome-stable >/dev/null 2>&1; then
+    log "Google Chrome ja instalado."
+    return
+  fi
+
+  log "Configurando repositorio apt do Google Chrome."
+  curl -fsSL \
+    -o "${tmp_dir}/google-linux-signing-key.pub" \
+    https://dl.google.com/linux/linux_signing_key.pub
+
+  "${SUDO[@]}" gpg --batch --yes --dearmor \
+    -o "${GOOGLE_KEYRING}" \
+    "${tmp_dir}/google-linux-signing-key.pub"
+
+  printf '%s\n' \
+    'Types: deb' \
+    'URIs: https://dl.google.com/linux/chrome/deb/' \
+    'Suites: stable' \
+    'Components: main' \
+    'Architectures: amd64' \
+    "Signed-By: ${GOOGLE_KEYRING}" \
+    | "${SUDO[@]}" tee /etc/apt/sources.list.d/google-chrome.sources >/dev/null
+
+  "${SUDO[@]}" apt-get update
+  "${SUDO[@]}" apt-get install -y google-chrome-stable
+}
+
+instalar_google_earth() {
+  local arch deb
+  arch="$(dpkg --print-architecture)"
+
+  if [[ "${arch}" != "amd64" ]]; then
+    log "Google Earth Pro pulado: pacote oficial Linux disponivel para amd64; arquitetura atual: ${arch}."
+    return
+  fi
+
+  if command -v google-earth-pro >/dev/null 2>&1 || dpkg -s google-earth-pro-stable >/dev/null 2>&1; then
+    log "Google Earth Pro ja instalado."
+    return
+  fi
+
+  log "Baixando Google Earth Pro .deb oficial."
+  deb="${tmp_dir}/google-earth-pro-stable_current_amd64.deb"
+  curl -fsSL \
+    -o "${deb}" \
+    https://dl.google.com/dl/earth/client/current/google-earth-pro-stable_current_amd64.deb
+
+  "${SUDO[@]}" apt-get install -y "${deb}"
+}
+
+main() {
+  require_privilegios
+  instalar_base_debian
+  instalar_vscodium
+  instalar_chrome
+  instalar_google_earth
+
+  log "Apps desktop instalados."
+}
+
+main "$@"

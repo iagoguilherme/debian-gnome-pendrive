@@ -18,7 +18,11 @@ Para instalar Codex, Claude Code e aplicar dotfiles:
 
   saggeo-instalar-agentes
 
-Para instalar Google Cloud CLI e 1Password CLI:
+Para instalar leitor PDF, VLC, VSCodium, Google Chrome e Google Earth Pro:
+
+  saggeo-instalar-apps-desktop
+
+Para instalar Google Cloud CLI, 1Password CLI e app 1Password:
 
   saggeo-instalar-cloud-tools
 

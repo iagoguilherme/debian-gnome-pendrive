@@ -67,6 +67,10 @@ EOF
     sudo saggeo-pos-instalacao
   fi
 
+  if perguntar_sim "Instalar PDF, VLC, VSCodium, Chrome e Google Earth Pro agora?" "s"; then
+    rodar_se_existir saggeo-instalar-apps-desktop
+  fi
+
   if perguntar_sim "Instalar Codex, Claude Code e aplicar dotfiles agora?" "n"; then
     rodar_se_existir saggeo-instalar-agentes
   fi

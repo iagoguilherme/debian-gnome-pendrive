@@ -7,8 +7,9 @@ Repositório para gerar uma imagem Debian bootável com desktop e ferramentas ba
 - ISO Debian Live `amd64` com GNOME.
 - Instalador gráfico incluído no ambiente live.
 - Pacotes base de terminal, rede, Git e desenvolvimento.
-- Pilha Python com `venv`, `pip`, `numpy`, `pandas`, `scipy`, `matplotlib`, `openpyxl` e utilitários comuns.
-- Base para agentes de terminal: Node/npm, Codex CLI, Claude Code e dotfiles.
+- Pilha Python completa com `python3-full`, `venv`, `pip`, `numpy`, `pandas`, `scipy`, `matplotlib`, `openpyxl` e utilitários comuns.
+- Apps desktop: leitor PDF, VLC, VSCodium, Google Chrome e Google Earth Pro.
+- Base para GitHub e agentes de terminal: Git, Git LFS, GitHub CLI `gh`, Node/npm, Codex CLI, Claude Code e dotfiles.
 - Integração com o repositório de configurações `git@github.com:iagoguilherme/mac-bootstrap.git`, incluindo Ghostty, Claude e Codex.
 - Dependências Saggeo do arquivo `DEPENDENCIES.md`: Pillow, piexif, Flask, bibliotecas Google, gcloud, 1Password CLI e padrões de Secret Manager.
 - Assistente de primeiro login para orientar a pós-instalação e oferecer agentes/cloud tools.
@@ -24,6 +25,21 @@ Para gerar a ISO customizada:
 - Permissão de `sudo`.
 
 No macOS, use este repositório para gravar a ISO pronta no pendrive. A geração da ISO completa usa `live-build`, que deve rodar em Linux.
+
+## Instalar Tudo No Debian Oficial
+
+Se o computador foi instalado com a ISO oficial do Debian GNOME, clone este repo
+e rode um comando unico:
+
+```bash
+cd debian-gnome-pendrive
+./scripts/instalar-no-debian.sh
+```
+
+Esse instalador copia os comandos Saggeo para `/usr/local`, roda a
+pos-instalacao base e instala Python completo, Git, GitHub CLI, leitor PDF, VLC,
+VSCodium, Google Chrome e Google Earth Pro. Codex/Claude/dotfiles, Google Cloud
+CLI e 1Password sao oferecidos como etapas opcionais no final.
 
 ## Gerar a ISO customizada
 
@@ -109,7 +125,7 @@ saggeo-instalar-cloud-tools
 Esse comando instala:
 
 - Google Cloud CLI (`gcloud`) pelo repositório apt oficial do Google;
-- 1Password CLI (`op`) pelo repositório apt oficial do 1Password;
+- 1Password CLI (`op`) e app desktop 1Password pelo repositório apt oficial do 1Password;
 - projeto padrão `saggeo-ecosystem-prod`;
 - região padrão `us-central1`.
 
@@ -118,6 +134,18 @@ Ele não grava credenciais. O padrão operacional continua sendo:
 - 1Password CLI para VMs/máquinas locais;
 - Secret Manager para Cloud Run;
 - tokens e service accounts configurados depois, fora da ISO.
+
+## Apps Desktop
+
+Para instalar ou reparar os apps desktop manualmente:
+
+```bash
+saggeo-instalar-apps-desktop
+```
+
+Esse comando instala `evince` como leitor PDF, VLC, VSCodium, Google Chrome e
+Google Earth Pro. Chrome e Earth Pro sao instalados somente em `amd64`, que e a
+arquitetura esperada para o PC alvo.
 
 ## Observação
 

@@ -12,6 +12,7 @@ evince
 file-roller
 gnome-terminal
 gparted
+vlc
 
 # Firmware e suporte comum de hardware
 firmware-linux

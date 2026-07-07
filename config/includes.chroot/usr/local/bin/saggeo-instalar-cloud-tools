@@ -47,13 +47,8 @@ instalar_gcloud() {
   log "gcloud instalado. Autentique depois com: gcloud auth login"
 }
 
-instalar_1password_cli() {
-  if command -v op >/dev/null 2>&1; then
-    log "1Password CLI ja instalado."
-    return
-  fi
-
-  log "Configurando repositorio apt oficial do 1Password CLI."
+configurar_1password_repo() {
+  log "Configurando repositorio apt oficial do 1Password."
   curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
     | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/1password-archive-keyring.gpg
 
@@ -67,11 +62,31 @@ instalar_1password_cli() {
 
   curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
     | sudo gpg --batch --yes --dearmor -o /usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg
+}
+
+instalar_1password() {
+  local pacotes=()
+
+  if ! command -v op >/dev/null 2>&1; then
+    pacotes+=(1password-cli)
+  fi
+
+  if ! command -v 1password >/dev/null 2>&1 && ! dpkg -s 1password >/dev/null 2>&1; then
+    pacotes+=(1password)
+  fi
+
+  if [[ "${#pacotes[@]}" -eq 0 ]]; then
+    log "1Password CLI e app desktop ja instalados."
+    return
+  fi
+
+  configurar_1password_repo
 
   sudo apt-get update
-  sudo apt-get install -y 1password-cli
+  sudo apt-get install -y "${pacotes[@]}"
 
-  log "1Password CLI instalado. Segredos continuam fora da ISO."
+  log "1Password instalado: CLI e/ou app desktop conforme necessario."
+  log "Segredos continuam fora da ISO."
   log "Padrao VM: /etc/1password/op.env com modo 0600, se houver service account."
 }
 
@@ -79,10 +94,9 @@ main() {
   require_sudo
   instalar_base
   instalar_gcloud
-  instalar_1password_cli
+  instalar_1password
 
   log "Concluido."
 }
 
 main "$@"
-
