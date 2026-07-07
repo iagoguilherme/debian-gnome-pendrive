@@ -235,7 +235,7 @@ configurar_favorito_gnome() {
   local desktop="$1"
   local lista atual
 
-  if [[ -z "${desktop}" || ! desktop_existe "${desktop}" ]]; then
+  if [[ -z "${desktop}" ]] || ! desktop_existe "${desktop}"; then
     return
   fi
 
