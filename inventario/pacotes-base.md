@@ -7,6 +7,10 @@
 - LibreOffice
 - Evince como leitor PDF
 - VLC
+- GNOME Terminal com perfil Clear Dark inspirado no Ghostty
+- JetBrains Mono
+- Noto Color Emoji
+- dconf-cli
 - GParted
 - Calamares para instalacao grafica a partir do live
 
@@ -50,6 +54,8 @@
 - Google Maps client opcional
 - IPython
 - pipx
+- variaveis globais em `/etc/profile.d/saggeo-python.sh`
+- helper `saggeo-python-venv`
 
 ## Agentes E Configuracoes
 
@@ -67,6 +73,7 @@
 - Google Chrome via repositorio apt oficial do Google
 - Google Earth Pro via pacote `.deb` oficial do Google
 - Instalador unico para Debian ja instalado: `scripts/instalar-no-debian.sh`
+- Aplicador de visual do terminal: `saggeo-aplicar-terminal`
 
 ## Cloud, Segredos E APIs Externas
 

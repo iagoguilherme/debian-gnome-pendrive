@@ -20,6 +20,10 @@ Para instalar apps desktop extras:
 
   saggeo-instalar-apps-desktop
 
+Para aplicar o visual Ghostty/Clear Dark no GNOME Terminal:
+
+  saggeo-aplicar-terminal
+
 Para instalar gcloud e 1Password CLI:
 
   saggeo-instalar-cloud-tools
@@ -31,3 +35,5 @@ chmod 755 /usr/local/bin/saggeo-primeiro-login
 chmod 755 /usr/local/bin/saggeo-instalar-agentes
 chmod 755 /usr/local/bin/saggeo-instalar-apps-desktop
 chmod 755 /usr/local/bin/saggeo-instalar-cloud-tools
+chmod 755 /usr/local/bin/saggeo-aplicar-terminal
+chmod 755 /usr/local/bin/saggeo-python-venv

@@ -33,13 +33,19 @@ e rode um comando unico:
 
 ```bash
 cd debian-gnome-pendrive
-./scripts/instalar-no-debian.sh
+./scripts/instalar-debian.sh
 ```
 
-Esse instalador copia os comandos Saggeo para `/usr/local`, roda a
-pos-instalacao base e instala Python completo, Git, GitHub CLI, leitor PDF, VLC,
-VSCodium, Google Chrome e Google Earth Pro. Codex/Claude/dotfiles, Google Cloud
-CLI e 1Password sao oferecidos como etapas opcionais no final.
+Esse instalador copia os comandos Saggeo para `/usr/local`, configura variaveis
+Python globais em `/etc/profile.d/saggeo-python.sh`, roda a pos-instalacao base,
+instala Python completo, Git, GitHub CLI, leitor PDF, VLC, VSCodium, Google
+Chrome e Google Earth Pro, e aplica no GNOME Terminal o visual Clear Dark vindo
+da configuracao Ghostty. Codex/Claude/dotfiles, Google Cloud CLI e 1Password
+tambem sao instalados no mesmo roteiro. O instalador roda em modo automatico,
+assumindo `sim/yes` nas etapas do proprio projeto, mostra uma saida colorida com
+barra de progresso e grava os detalhes tecnicos em `~/.local/state/saggeo/`.
+Ele pode ser executado de novo: primeiro verifica o que ja existe e depois
+complementa apenas o que estiver faltando.
 
 ## Gerar a ISO customizada
 
@@ -146,6 +152,27 @@ saggeo-instalar-apps-desktop
 Esse comando instala `evince` como leitor PDF, VLC, VSCodium, Google Chrome e
 Google Earth Pro. Chrome e Earth Pro sao instalados somente em `amd64`, que e a
 arquitetura esperada para o PC alvo.
+
+## Python E Terminal
+
+As variaveis globais de Python ficam em:
+
+```text
+/etc/profile.d/saggeo-python.sh
+```
+
+Elas habilitam UTF-8, adicionam `~/.local/bin` ao `PATH` e deixam `pipx` pronto.
+Para criar um ambiente Python no projeto atual:
+
+```bash
+saggeo-python-venv
+```
+
+Para reaplicar o visual Ghostty/Clear Dark no GNOME Terminal:
+
+```bash
+saggeo-aplicar-terminal
+```
 
 ## Observação
 

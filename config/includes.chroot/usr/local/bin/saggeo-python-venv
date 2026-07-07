@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+venv_dir="${1:-.venv}"
+
+python3 -m venv --system-site-packages "${venv_dir}"
+
+# shellcheck source=/dev/null
+source "${venv_dir}/bin/activate"
+python -m pip install --upgrade pip setuptools wheel
+
+cat <<EOF
+Ambiente Python pronto em: ${venv_dir}
+
+Para usar:
+
+  source ${venv_dir}/bin/activate
+
+O venv foi criado com --system-site-packages para aproveitar numpy, pandas,
+scipy, matplotlib, openpyxl e demais pacotes instalados pelo Debian SAGGEO.
+EOF

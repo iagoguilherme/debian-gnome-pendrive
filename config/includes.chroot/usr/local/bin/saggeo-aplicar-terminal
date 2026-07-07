@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+perfil_nome="${SAGGEO_TERMINAL_PROFILE:-Saggeo Clear Dark}"
+perfil_id="${SAGGEO_TERMINAL_PROFILE_ID:-saggeo-clear-dark}"
+perfil_path="/org/gnome/terminal/legacy/profiles:/:${perfil_id}/"
+font_name="${SAGGEO_TERMINAL_FONT:-JetBrains Mono 14}"
+palette="['#35424c', '#b45648', '#6caa71', '#c4ac62', '#6d96b4', '#bd7bcd', '#7ccbcd', '#dee5eb', '#465c6d', '#df6c5a', '#79be7e', '#e5c872', '#67b5ed', '#d389e5', '#84dde0', '#e5eff5']"
+
+log() {
+  printf '[saggeo-terminal] %s\n' "$*"
+}
+
+require_desktop() {
+  if ! command -v gsettings >/dev/null 2>&1 || ! command -v dconf >/dev/null 2>&1; then
+    echo "Instale gsettings/dconf antes: sudo apt install dconf-cli libglib2.0-bin" >&2
+    exit 1
+  fi
+
+  if ! gsettings list-schemas | grep -qx 'org.gnome.Terminal.ProfilesList'; then
+    echo "GNOME Terminal nao encontrado para este usuario." >&2
+    exit 1
+  fi
+}
+
+perfil_existe_na_lista() {
+  local lista="$1"
+  [[ "${lista}" == *"'${perfil_id}'"* || "${lista}" == *"${perfil_id}"* ]]
+}
+
+adicionar_perfil_na_lista() {
+  local lista atual
+  lista="$(gsettings get org.gnome.Terminal.ProfilesList list)"
+
+  if perfil_existe_na_lista "${lista}"; then
+    return
+  fi
+
+  atual="$(printf '%s' "${lista}" | sed -e "s/^\\[//" -e "s/\\]$//" -e "s/[[:space:]]//g")"
+  if [[ -z "${atual}" || "${atual}" == "@as" ]]; then
+    gsettings set org.gnome.Terminal.ProfilesList list "['${perfil_id}']"
+  else
+    gsettings set org.gnome.Terminal.ProfilesList list "[${atual}, '${perfil_id}']"
+  fi
+}
+
+aplicar_perfil() {
+  adicionar_perfil_na_lista
+
+  dconf write "${perfil_path}visible-name" "'${perfil_nome}'"
+  dconf write "${perfil_path}use-theme-colors" "false"
+  dconf write "${perfil_path}foreground-color" "'#e6e6e6'"
+  dconf write "${perfil_path}background-color" "'#212734'"
+  dconf write "${perfil_path}bold-color-same-as-fg" "true"
+  dconf write "${perfil_path}palette" "${palette}"
+  dconf write "${perfil_path}use-system-font" "false"
+  dconf write "${perfil_path}font" "'${font_name}'"
+  dconf write "${perfil_path}cursor-shape" "'ibeam'"
+  dconf write "${perfil_path}scrollbar-policy" "'never'"
+  dconf write "${perfil_path}scrollback-unlimited" "true"
+  dconf write "${perfil_path}audible-bell" "false"
+
+  gsettings set org.gnome.Terminal.ProfilesList default "${perfil_id}"
+}
+
+main() {
+  require_desktop
+  aplicar_perfil
+  log "Perfil aplicado: ${perfil_nome}"
+  log "Abra um novo GNOME Terminal para ver o visual Clear Dark."
+}
+
+main "$@"

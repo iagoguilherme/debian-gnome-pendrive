@@ -13,6 +13,11 @@ perguntar_sim() {
   local padrao="${2:-s}"
   local resposta
 
+  if [[ "${SAGGEO_ASSUME_YES:-0}" == "1" || "${SAGGEO_ASSUME_YES:-}" == "true" || "${SAGGEO_ASSUME_YES:-}" == "yes" ]]; then
+    log "${pergunta} [auto: sim]"
+    return 0
+  fi
+
   if [[ "${padrao}" == "s" ]]; then
     read -r -p "${pergunta} [S/n] " resposta
     [[ -z "${resposta}" || "${resposta}" =~ ^[Ss]$ ]]
@@ -53,6 +58,8 @@ Programas instalados na propria ISO:
 - Python, venv, pip, numpy, pandas, scipy, matplotlib, openpyxl, Pillow,
   piexif, Flask e bibliotecas Google comuns.
 - Node.js, npm, gh e base para Codex/Claude.
+- Variaveis Python prontas e comando saggeo-python-venv.
+- GNOME Terminal com visual Ghostty/Clear Dark.
 
 Comandos Saggeo disponiveis:
 - sudo saggeo-pos-instalacao
@@ -69,6 +76,10 @@ EOF
 
   if perguntar_sim "Instalar PDF, VLC, VSCodium, Chrome e Google Earth Pro agora?" "s"; then
     rodar_se_existir saggeo-instalar-apps-desktop
+  fi
+
+  if perguntar_sim "Aplicar visual Ghostty/Clear Dark no GNOME Terminal agora?" "s"; then
+    rodar_se_existir saggeo-aplicar-terminal
   fi
 
   if perguntar_sim "Instalar Codex, Claude Code e aplicar dotfiles agora?" "n"; then

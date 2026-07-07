@@ -11,6 +11,10 @@ log() {
 confirmar() {
   local pergunta="$1"
   local resposta
+  if [[ "${SAGGEO_ASSUME_YES:-0}" == "1" || "${SAGGEO_ASSUME_YES:-}" == "true" || "${SAGGEO_ASSUME_YES:-}" == "yes" ]]; then
+    log "${pergunta} [auto: sim]"
+    return 0
+  fi
   read -r -p "${pergunta} [s/N] " resposta
   [[ "${resposta}" =~ ^[Ss]$ ]]
 }
@@ -88,6 +92,10 @@ aplicar_dotfiles() {
 }
 
 main() {
+  if [[ "${SAGGEO_ASSUME_YES:-0}" == "1" || "${SAGGEO_ASSUME_YES:-}" == "true" || "${SAGGEO_ASSUME_YES:-}" == "yes" ]]; then
+    export GIT_TERMINAL_PROMPT="${GIT_TERMINAL_PROMPT:-0}"
+  fi
+
   instalar_base
   instalar_codex
   instalar_claude_code

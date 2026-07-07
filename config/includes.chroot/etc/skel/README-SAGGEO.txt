@@ -22,6 +22,14 @@ Para instalar leitor PDF, VLC, VSCodium, Google Chrome e Google Earth Pro:
 
   saggeo-instalar-apps-desktop
 
+Para aplicar o visual Ghostty/Clear Dark no GNOME Terminal:
+
+  saggeo-aplicar-terminal
+
+Para criar um venv Python pronto no projeto atual:
+
+  saggeo-python-venv
+
 Para instalar Google Cloud CLI, 1Password CLI e app 1Password:
 
   saggeo-instalar-cloud-tools

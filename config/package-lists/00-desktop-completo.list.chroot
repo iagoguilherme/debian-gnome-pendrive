@@ -11,6 +11,9 @@ libreoffice
 evince
 file-roller
 gnome-terminal
+dconf-cli
+fonts-jetbrains-mono
+fonts-noto-color-emoji
 gparted
 vlc
 
