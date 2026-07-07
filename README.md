@@ -45,7 +45,9 @@ tambem sao instalados no mesmo roteiro. O instalador roda em modo automatico,
 assumindo `sim/yes` nas etapas do proprio projeto, mostra uma saida colorida com
 barra de progresso e grava os detalhes tecnicos em `~/.local/state/saggeo/`.
 Ele pode ser executado de novo: primeiro verifica o que ja existe e depois
-complementa apenas o que estiver faltando.
+complementa apenas o que estiver faltando. Os scripts internos tambem checam
+pacotes/comandos antes de chamar instaladores, entao itens ja presentes sao
+marcados como `OK` no log e pulados.
 
 ## Gerar a ISO customizada
 
@@ -173,6 +175,12 @@ Para reaplicar o visual Ghostty/Clear Dark no GNOME Terminal:
 ```bash
 saggeo-aplicar-terminal
 ```
+
+Esse comando instala a `JetBrainsMono Nerd Font` do projeto Nerd Fonts para
+habilitar icones no terminal, aplica a paleta Clear Dark do arquivo
+`ghostty/config` e define o perfil `Saggeo Clear Dark` como padrao. O GNOME
+Terminal moderno pode ignorar transparencia/blur; nesses casos cor e fonte
+continuam sendo aplicadas.
 
 ## Observação
 

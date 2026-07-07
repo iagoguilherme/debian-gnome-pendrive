@@ -1,11 +1,35 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+export DEBIAN_FRONTEND=noninteractive
+export APT_LISTCHANGES_FRONTEND=none
+
 GCP_PROJECT="${GCP_PROJECT:-saggeo-ecosystem-prod}"
 GCP_REGION="${GCP_REGION:-us-central1}"
 
 log() {
   printf '[saggeo-cloud] %s\n' "$*"
+}
+
+instalar_pacotes_faltantes() {
+  local pacotes=("$@")
+  local faltando=()
+  local pacote
+
+  for pacote in "${pacotes[@]}"; do
+    if ! dpkg -s "${pacote}" >/dev/null 2>&1; then
+      faltando+=("${pacote}")
+    fi
+  done
+
+  if [[ "${#faltando[@]}" -eq 0 ]]; then
+    log "Pacotes apt ja instalados: ${pacotes[*]}"
+    return
+  fi
+
+  log "Instalando pacotes apt faltantes: ${faltando[*]}"
+  sudo apt-get update
+  sudo apt-get install -y "${faltando[@]}"
 }
 
 require_sudo() {
@@ -16,8 +40,7 @@ require_sudo() {
 }
 
 instalar_base() {
-  sudo apt-get update
-  sudo apt-get install -y ca-certificates curl gnupg gpg apt-transport-https lsb-release
+  instalar_pacotes_faltantes ca-certificates curl gnupg gpg apt-transport-https lsb-release
 }
 
 instalar_gcloud() {
@@ -40,7 +63,7 @@ instalar_gcloud() {
     | sudo tee /etc/apt/sources.list.d/google-cloud-cli.sources >/dev/null
 
   sudo apt-get update
-  sudo apt-get install -y google-cloud-cli
+  instalar_pacotes_faltantes google-cloud-cli
 
   gcloud config set project "${GCP_PROJECT}" || true
   gcloud config set run/region "${GCP_REGION}" || true
@@ -82,8 +105,7 @@ instalar_1password() {
 
   configurar_1password_repo
 
-  sudo apt-get update
-  sudo apt-get install -y "${pacotes[@]}"
+  instalar_pacotes_faltantes "${pacotes[@]}"
 
   log "1Password instalado: CLI e/ou app desktop conforme necessario."
   log "Segredos continuam fora da ISO."

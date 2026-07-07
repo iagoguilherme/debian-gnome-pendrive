@@ -4,16 +4,17 @@ set -Eeuo pipefail
 perfil_nome="${SAGGEO_TERMINAL_PROFILE:-Saggeo Clear Dark}"
 perfil_id="${SAGGEO_TERMINAL_PROFILE_ID:-saggeo-clear-dark}"
 perfil_path="/org/gnome/terminal/legacy/profiles:/:${perfil_id}/"
-font_name="${SAGGEO_TERMINAL_FONT:-JetBrains Mono 14}"
+font_name="${SAGGEO_TERMINAL_FONT:-JetBrainsMono Nerd Font 14}"
 palette="['#35424c', '#b45648', '#6caa71', '#c4ac62', '#6d96b4', '#bd7bcd', '#7ccbcd', '#dee5eb', '#465c6d', '#df6c5a', '#79be7e', '#e5c872', '#67b5ed', '#d389e5', '#84dde0', '#e5eff5']"
+nerd_font_url="${SAGGEO_NERD_FONT_URL:-https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip}"
 
 log() {
   printf '[saggeo-terminal] %s\n' "$*"
 }
 
 require_desktop() {
-  if ! command -v gsettings >/dev/null 2>&1 || ! command -v dconf >/dev/null 2>&1; then
-    echo "Instale gsettings/dconf antes: sudo apt install dconf-cli libglib2.0-bin" >&2
+  if ! command -v gsettings >/dev/null 2>&1 || ! command -v dconf >/dev/null 2>&1 || ! command -v fc-cache >/dev/null 2>&1; then
+    echo "Instale gsettings/dconf/fontconfig antes: sudo apt install dconf-cli libglib2.0-bin fontconfig" >&2
     exit 1
   fi
 
@@ -21,6 +22,51 @@ require_desktop() {
     echo "GNOME Terminal nao encontrado para este usuario." >&2
     exit 1
   fi
+}
+
+fonte_nerd_instalada() {
+  command -v fc-match >/dev/null 2>&1 \
+    && fc-match -f '%{family}\n' 'JetBrainsMono Nerd Font' 2>/dev/null \
+      | grep -qi 'JetBrainsMono Nerd Font'
+}
+
+instalar_nerd_font() {
+  local font_dir zip_file
+
+  if fonte_nerd_instalada; then
+    log "JetBrainsMono Nerd Font ja instalada."
+    return
+  fi
+
+  if ! command -v curl >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1; then
+    echo "Nao encontrei curl/unzip para instalar a Nerd Font." >&2
+    exit 1
+  fi
+
+  log "Instalando JetBrainsMono Nerd Font para icones do terminal."
+  font_dir="${HOME}/.local/share/fonts/JetBrainsMonoNerdFont"
+  zip_file="$(mktemp)"
+
+  mkdir -p "${font_dir}"
+  curl -fsSL -o "${zip_file}" "${nerd_font_url}"
+  unzip -o -q "${zip_file}" -d "${font_dir}"
+  rm -f "${zip_file}"
+  fc-cache -f "${HOME}/.local/share/fonts" >/dev/null
+}
+
+write_profile_key() {
+  local path="$1"
+  local chave="$2"
+  local valor="$3"
+
+  dconf write "${path}${chave}" "${valor}" >/dev/null 2>&1 || true
+}
+
+write_if_possible() {
+  local chave="$1"
+  local valor="$2"
+
+  write_profile_key "${perfil_path}" "${chave}" "${valor}"
 }
 
 perfil_existe_na_lista() {
@@ -44,29 +90,58 @@ adicionar_perfil_na_lista() {
   fi
 }
 
+aplicar_valores_no_perfil() {
+  local path="$1"
+  local nome="${2:-}"
+
+  if [[ -n "${nome}" ]]; then
+    write_profile_key "${path}" "visible-name" "'${nome}'"
+  fi
+
+  write_profile_key "${path}" "use-theme-colors" "false"
+  write_profile_key "${path}" "foreground-color" "'#e6e6e6'"
+  write_profile_key "${path}" "background-color" "'#212734'"
+  write_profile_key "${path}" "bold-color-same-as-fg" "true"
+  write_profile_key "${path}" "palette" "${palette}"
+  write_profile_key "${path}" "use-system-font" "false"
+  write_profile_key "${path}" "font" "'${font_name}'"
+  write_profile_key "${path}" "cursor-shape" "'ibeam'"
+  write_profile_key "${path}" "scrollbar-policy" "'never'"
+  write_profile_key "${path}" "scrollback-unlimited" "true"
+  write_profile_key "${path}" "audible-bell" "false"
+  write_profile_key "${path}" "use-transparent-background" "true"
+  write_profile_key "${path}" "use-theme-transparency" "false"
+  write_profile_key "${path}" "background-transparency-percent" "5"
+}
+
 aplicar_perfil() {
+  local perfil_default perfil_default_path
+
+  perfil_default="$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")"
+  if [[ "${perfil_default}" == @* || "${perfil_default}" == "[]" ]]; then
+    perfil_default=""
+  fi
+
   adicionar_perfil_na_lista
 
-  dconf write "${perfil_path}visible-name" "'${perfil_nome}'"
-  dconf write "${perfil_path}use-theme-colors" "false"
-  dconf write "${perfil_path}foreground-color" "'#e6e6e6'"
-  dconf write "${perfil_path}background-color" "'#212734'"
-  dconf write "${perfil_path}bold-color-same-as-fg" "true"
-  dconf write "${perfil_path}palette" "${palette}"
-  dconf write "${perfil_path}use-system-font" "false"
-  dconf write "${perfil_path}font" "'${font_name}'"
-  dconf write "${perfil_path}cursor-shape" "'ibeam'"
-  dconf write "${perfil_path}scrollbar-policy" "'never'"
-  dconf write "${perfil_path}scrollback-unlimited" "true"
-  dconf write "${perfil_path}audible-bell" "false"
+  aplicar_valores_no_perfil "${perfil_path}" "${perfil_nome}"
+
+  if [[ -n "${perfil_default}" && "${perfil_default}" != "${perfil_id}" ]]; then
+    perfil_default_path="/org/gnome/terminal/legacy/profiles:/:${perfil_default}/"
+    aplicar_valores_no_perfil "${perfil_default_path}" ""
+    log "Tambem apliquei cores/fonte no perfil anterior: ${perfil_default}"
+  fi
 
   gsettings set org.gnome.Terminal.ProfilesList default "${perfil_id}"
 }
 
 main() {
   require_desktop
+  instalar_nerd_font
   aplicar_perfil
   log "Perfil aplicado: ${perfil_nome}"
+  log "Fonte aplicada: ${font_name}"
+  log "Transparencia foi solicitada; GNOME Terminal moderno pode ignorar essa chave."
   log "Abra um novo GNOME Terminal para ver o visual Clear Dark."
 }
 

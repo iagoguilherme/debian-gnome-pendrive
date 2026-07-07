@@ -1,11 +1,35 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+export DEBIAN_FRONTEND=noninteractive
+export APT_LISTCHANGES_FRONTEND=none
+
 DOTFILES_REPO="${DOTFILES_REPO:-git@github.com:iagoguilherme/mac-bootstrap.git}"
 DOTFILES_DIR="${DOTFILES_DIR:-${HOME}/dotfiles}"
 
 log() {
   printf '[saggeo-agentes] %s\n' "$*"
+}
+
+instalar_pacotes_faltantes() {
+  local pacotes=("$@")
+  local faltando=()
+  local pacote
+
+  for pacote in "${pacotes[@]}"; do
+    if ! dpkg -s "${pacote}" >/dev/null 2>&1; then
+      faltando+=("${pacote}")
+    fi
+  done
+
+  if [[ "${#faltando[@]}" -eq 0 ]]; then
+    log "Base apt para agentes ja instalada."
+    return
+  fi
+
+  log "Instalando pacotes apt faltantes: ${faltando[*]}"
+  sudo apt-get update
+  sudo apt-get install -y "${faltando[@]}"
 }
 
 confirmar() {
@@ -21,9 +45,7 @@ confirmar() {
 
 instalar_base() {
   if command -v apt-get >/dev/null 2>&1; then
-    log "Instalando base para agentes via apt."
-    sudo apt-get update
-    sudo apt-get install -y git curl ca-certificates nodejs npm zsh gh
+    instalar_pacotes_faltantes git curl ca-certificates nodejs npm zsh gh
   fi
 }
 

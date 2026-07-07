@@ -8,6 +8,9 @@ passo_atual=0
 total_passos=0
 sudo_keepalive_pid=""
 
+export DEBIAN_FRONTEND=noninteractive
+export APT_LISTCHANGES_FRONTEND=none
+
 if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
   reset=$'\033[0m'
   bold=$'\033[1m'
@@ -214,6 +217,23 @@ verificar_estado() {
       printf '  FALTA  %s\n' "${item}"
     fi
   done
+
+  printf '\nVisual do terminal:\n'
+  if command -v fc-match >/dev/null 2>&1 \
+    && fc-match -f '%{family}\n' 'JetBrainsMono Nerd Font' 2>/dev/null \
+      | grep -qi 'JetBrainsMono Nerd Font'; then
+    printf '  OK     JetBrainsMono Nerd Font\n'
+  else
+    printf '  FALTA  JetBrainsMono Nerd Font\n'
+  fi
+
+  if command -v gsettings >/dev/null 2>&1 \
+    && gsettings get org.gnome.Terminal.ProfilesList default 2>/dev/null \
+      | grep -q 'saggeo-clear-dark'; then
+    printf '  OK     Perfil Saggeo Clear Dark\n'
+  else
+    printf '  FALTA  Perfil Saggeo Clear Dark\n'
+  fi
 }
 
 instalar_comandos_saggeo() {
@@ -271,7 +291,7 @@ main() {
   rodar_limpo "Atualizando base, Python, GitHub CLI e utilitarios" sudo saggeo-pos-instalacao
   rodar_limpo "Instalando PDF, VLC, VSCodium, Chrome e Google Earth" saggeo-instalar-apps-desktop
   rodar_limpo "Aplicando visual Ghostty no GNOME Terminal" saggeo-aplicar-terminal
-  rodar_interativo "Instalando Codex, Claude Code e dotfiles" saggeo-instalar-agentes
+  rodar_limpo "Instalando Codex, Claude Code e dotfiles" saggeo-instalar-agentes
   rodar_limpo "Instalando Google Cloud CLI e 1Password" saggeo-instalar-cloud-tools
 
   printf '\n%bConcluido.%b\n' "${green}${bold}" "${reset}"

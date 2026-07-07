@@ -7,19 +7,36 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 export DEBIAN_FRONTEND=noninteractive
+export APT_LISTCHANGES_FRONTEND=none
 
-apt-get update
-apt-get install -y \
-  ca-certificates curl wget git git-lfs gnupg jq ripgrep fd-find tree htop tmux \
-  vim nano rsync zip unzip openssh-client openssh-server build-essential pkg-config \
-  evince vlc gnome-terminal dconf-cli fonts-jetbrains-mono fonts-noto-color-emoji \
-  python3 python3-full python3-dev python3-pip python3-venv python3-setuptools python3-wheel \
-  python3-numpy python3-pandas python3-scipy python3-matplotlib python3-openpyxl \
-  python3-pil python3-piexif python3-flask python3-requests python3-bs4 python3-lxml \
-  python3-yaml python3-google-auth python3-google-auth-httplib2 \
-  python3-google-auth-oauthlib python3-google-api-core python3-googleapi \
-  python3-googlemaps ipython3 pipx network-manager sudo nodejs npm zsh gh \
-  apt-transport-https gpg lsb-release debian-archive-keyring
+pacotes="
+ca-certificates curl wget git git-lfs gnupg jq ripgrep fd-find tree htop tmux
+vim nano rsync zip unzip openssh-client openssh-server build-essential pkg-config
+evince vlc gnome-terminal dconf-cli fontconfig fonts-jetbrains-mono fonts-noto-color-emoji
+python3 python3-full python3-dev python3-pip python3-venv python3-setuptools python3-wheel
+python3-numpy python3-pandas python3-scipy python3-matplotlib python3-openpyxl
+python3-pil python3-piexif python3-flask python3-requests python3-bs4 python3-lxml
+python3-yaml python3-google-auth python3-google-auth-httplib2
+python3-google-auth-oauthlib python3-google-api-core python3-googleapi
+python3-googlemaps ipython3 pipx network-manager sudo nodejs npm zsh gh
+apt-transport-https gpg lsb-release debian-archive-keyring
+"
+
+faltando=""
+for pacote in $pacotes; do
+  if ! dpkg -s "$pacote" >/dev/null 2>&1; then
+    faltando="$faltando $pacote"
+  fi
+done
+
+if [ -n "$faltando" ]; then
+  echo "Instalando pacotes faltantes:$faltando"
+  apt-get update
+  # shellcheck disable=SC2086
+  apt-get install -y $faltando
+else
+  echo "Pacotes base ja instalados. Nada a complementar nesta etapa."
+fi
 
 systemctl enable NetworkManager || true
 systemctl enable ssh || true

@@ -9,6 +9,7 @@
 - VLC
 - GNOME Terminal com perfil Clear Dark inspirado no Ghostty
 - JetBrains Mono
+- JetBrainsMono Nerd Font instalada por `saggeo-aplicar-terminal`
 - Noto Color Emoji
 - dconf-cli
 - GParted

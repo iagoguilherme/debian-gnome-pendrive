@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+export DEBIAN_FRONTEND=noninteractive
+export APT_LISTCHANGES_FRONTEND=none
+
 GOOGLE_KEYRING="/usr/share/keyrings/google-linux-signing-key.gpg"
 VSCODIUM_KEYRING="/usr/share/keyrings/vscodium-archive-keyring.gpg"
 
@@ -17,6 +20,27 @@ log() {
   printf '[saggeo-apps] %s\n' "$*"
 }
 
+instalar_pacotes_faltantes() {
+  local pacotes=("$@")
+  local faltando=()
+  local pacote
+
+  for pacote in "${pacotes[@]}"; do
+    if ! dpkg -s "${pacote}" >/dev/null 2>&1; then
+      faltando+=("${pacote}")
+    fi
+  done
+
+  if [[ "${#faltando[@]}" -eq 0 ]]; then
+    log "Pacotes apt ja instalados: ${pacotes[*]}"
+    return
+  fi
+
+  log "Instalando pacotes apt faltantes: ${faltando[*]}"
+  "${SUDO[@]}" apt-get update
+  "${SUDO[@]}" apt-get install -y "${faltando[@]}"
+}
+
 require_privilegios() {
   if [[ "${#SUDO[@]}" -gt 0 ]]; then
     if ! sudo -v; then
@@ -27,11 +51,9 @@ require_privilegios() {
 }
 
 instalar_base_debian() {
-  log "Instalando leitor PDF, VLC e utilitarios de instalacao."
-  "${SUDO[@]}" apt-get update
-  "${SUDO[@]}" apt-get install -y \
+  instalar_pacotes_faltantes \
     ca-certificates curl wget gnupg gpg apt-transport-https lsb-release \
-    evince vlc xdg-utils
+    fontconfig evince vlc xdg-utils
 }
 
 instalar_vscodium() {
@@ -58,8 +80,7 @@ instalar_vscodium() {
     "Signed-By: ${VSCODIUM_KEYRING}" \
     | "${SUDO[@]}" tee /etc/apt/sources.list.d/vscodium.sources >/dev/null
 
-  "${SUDO[@]}" apt-get update
-  "${SUDO[@]}" apt-get install -y codium
+  instalar_pacotes_faltantes codium
 }
 
 instalar_chrome() {
@@ -94,8 +115,7 @@ instalar_chrome() {
     "Signed-By: ${GOOGLE_KEYRING}" \
     | "${SUDO[@]}" tee /etc/apt/sources.list.d/google-chrome.sources >/dev/null
 
-  "${SUDO[@]}" apt-get update
-  "${SUDO[@]}" apt-get install -y google-chrome-stable
+  instalar_pacotes_faltantes google-chrome-stable
 }
 
 instalar_google_earth() {
