@@ -92,12 +92,14 @@ aplicar_config_ghostty() {
 configurar_alternativa_terminal() {
   local ghostty_bin
 
-  if ! command -v ghostty >/dev/null 2>&1; then
+  if command -v ghostty >/dev/null 2>&1; then
+    ghostty_bin="$(command -v ghostty)"
+  elif [[ -x /snap/bin/ghostty ]]; then
+    ghostty_bin="/snap/bin/ghostty"
+  else
     log "Ghostty ainda nao esta instalado; apenas a config foi preparada."
     return
   fi
-
-  ghostty_bin="$(command -v ghostty)"
 
   if command -v update-alternatives >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
     sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator "${ghostty_bin}" 90 >/dev/null 2>&1 || true
